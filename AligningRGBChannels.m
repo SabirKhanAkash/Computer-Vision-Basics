@@ -3,41 +3,49 @@ img = imread('course1image.jpg');
 B=imcrop(img,[0,0,1200,341]);
 G=imcrop(img,[0,342,1200,340]);
 R=img(683:1023,1:400);
+
 b=double(B);
+g=double(G);
 r=double(R);
 
-x_centr = 400/2;
-y_centr = 341/2;
+b1 = B(146:196,175:225);
+r1 = R(146:196,175:225);
 
-sizeOfCroppedImg = 51;
+ref_img_region = G(146:196,175:225);
+ref_img_region = double(ref_img_region);
 
-x_min = x_centr - sizeOfCroppedImg/2;
-y_min = y_centr - sizeOfCroppedImg/2;
+error = inf;
+for i = -10:10
+    for j = -10:10
+        shiftr1 = circshift(r1,[i,j]);
+        temp1 = sum(sum((double(ref_img_region) - double(shiftr1)) .^ 2));
+        
+        if temp1 < error
+            error = temp1;
+            shiftR_row = i;
+            shiftR_col = j;
+            
+        end
+    end
+end
 
-ref_img_region = imcrop(g, [x_min y_min sizeOfCroppedImg-1 sizeOfCroppedImg-1]);
-imshow(ref_img_region);
-disp(size(ref_img_region));
+error = inf;
+for i = -10:10
+    for j = -10:10
+        shiftb1 = circshift(b1,[i,j]);
+        temp2 = sum(sum((double(ref_img_region) - double(shiftb1)) .^ 2));
+        
+        if temp2 < error
+            error = temp2;
+            shiftb_row = i;
+            shiftb_col = j;
+            
+        end
+    end
+end
 
-imshow(b);
-pause(2);
+shiftr = circshift(r,[shiftR_row,shiftR_col]);
+shiftb = circshift(b,[shiftb_row,shiftb_col]);
 
-imshow(g);
-pause(2);
-
-imshow(r);
-pause(2);
-
-shiftr = circshift(r,[-10,10]);
-cngR = immse(shiftr, r) * numel(shiftr);
-
-
-disp(cngR);
-
-shiftb = circshift(b,[-10,-10]);
-cngB = immse(shiftb, b) * numel(shiftb);
-
-
-disp(cngB);
-
-%ColorImg_aligned = cat(3,cngR,g,cngB);
-%imshow(ColorImg_aligned);
+ColorImg_aligned = cat(3,uint8(shiftr),uint8(g),uint8(shiftb));
+imshow(ColorImg_aligned);
